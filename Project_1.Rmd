@@ -1,22 +1,25 @@
 ---
 title: "Project_1"
 author: "Taylor Ashby"
-date: "9/11/2020"
-output: html_document
+date: "9/18/2020"
+output: 
+  html_document:
+    toc: yes
+  rmarkdown::github_document:
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Project 1, ST558
+Below are the libraries needed to create this vignette.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r libraries, message=FALSE}
+library(dplyr)
+library(httr)
+library(jsonlite)
 ```
 
 ## Including Plots
@@ -24,7 +27,6 @@ summary(cars)
 You can also embed plots, for example:
 
 ```{r pressure, echo=FALSE}
-plot(pressure)
+GET https://statsapi.web.nhl.com/api/v1/franchises
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
