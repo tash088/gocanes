@@ -83,5 +83,16 @@ get_hockey_data<-function(endpoint=NULL,ID=NULL,mod=NULL){
     else if (endpoint=="team_stats"){get_stats(ID)} 
 }
 
-get_hockey_data(endpoint="team_stats",ID=3)
+get_hockey_data(endpoint="franchise_data")
+
+#do a join
+x<-get_hockey_data(endpoint="goalie_records",ID=5)
+x
+y<-get_hockey_data(endpoint="franchise_records",ID=5)
+y
+
+x$teams.name
+select(x,teams.franchise.teamName,teams.franchise.franchiseId)
+
+
 
