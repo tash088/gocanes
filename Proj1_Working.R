@@ -2,6 +2,8 @@
 library(httr)
 library(jsonlite)
 library(dplyr)
+library(ggplot2)
+library(tidyr)
 
 
 get_franchise_data<-function(ID=NULL){
@@ -109,11 +111,46 @@ table(b$data.activePlayer,b$longTimer)
 #Get total games by franchise
 c<-get_hockey_data(endpoint="franchise_totals")
 c<-c%>%group_by(data.franchiseId)%>%summarise(totalGames=sum(data.gamesPlayed))
-
+c
 #Get franchise data
 d<-get_hockey_data(endpoint="franchise_data")
 d<-rename(d,data.franchiseId=data.id)
+
+#Join by franchiseId so that totalGames column is included
 e<-inner_join(c,d)
-attributes(e)
+
+#Calculate franchise age and create scatter plot of franchise age 
+#vs.total games played
+es<-separate(e,data.firstSeasonId,into=c("startYear","firstSpring"),sep=4)
+es<-mutate(es,FranchiseAge=2020-as.numeric(startYear))
+
+g<-ggplot(es,aes(x=FranchiseAge,y=totalGames))
+
+g+geom_point()+ylab("Total Games Played")+xlab("Franchise Age")+ 
+  geom_smooth(method=lm,col="Green") + 
+  labs(title="Total Games Played by Franchise Age")
+
+
+#Create new variable indicating if the franchise is active
 e<-mutate(e,active=is.na(data.lastSeasonId))
 table(e$active)
+
+#Create quantitative summary by active status
+e %>% group_by(active) %>% summarise(avgGames=mean(totalGames),medGames=median(
+  totalGames),grandTot=sum(totalGames))
+e
+
+#Calculate average goals for and against for the Hurricanes franchise, by team.
+f<-get_hockey_data(endpoint="franchise_totals",ID=26)
+f<- f %>% mutate(avgGoals=data.goalsFor/data.gamesPlayed,
+                  avgGoalsAgainst=data.goalsAgainst/data.gamesPlayed)
+h<-mutate(f, goalRatio=avgGoals/avgGoalsAgainst)
+h %>% select(data.teamName,goalRatio,data.gameTypeId)
+g<-ggplot(h,aes(data.teamName,goalRatio,fill=as.factor(data.gameTypeId)))
+g+geom_bar(stat="identity",position="dodge")+scale_fill_discrete(name="Game Type",labels=c("Regular Season","Playoff"))+
+  xlab("Team Name")+ylab("Ratio of Goals Scored to Goals Against")
+
+#Create box plots comparing the Games played for Active and Inactive Teams
+g<-ggplot(e,aes(x=active))
+g+geom_boxplot(aes(y=totalGames))#need to add labels/title
+
