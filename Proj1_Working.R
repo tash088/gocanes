@@ -17,9 +17,6 @@ get_franchise_data<-function(ID=NULL){
   a
 }
 
-get_franchise_data()
-
-
 get_franchise_totals<-function(ID=NULL){
   myurl<-"https://records.nhl.com/site/api/franchise-team-totals"
   a<-GET (myurl)
@@ -74,8 +71,6 @@ get_stats<-function(ID=NULL, mod=NULL){
   a
 }
 
-get_stats(ID=54)
-
 get_hockey_data<-function(endpoint=NULL,ID=NULL,mod=NULL){
   if(is.null(endpoint)){stop("Need valid endpoint")}
     else if (endpoint=="franchise_data"){get_franchise_data(ID)}
@@ -121,6 +116,7 @@ e<-inner_join(c,d)
 
 #Calculate franchise age and create scatter plot of franchise age 
 #vs.total games played
+c
 es<-separate(e,data.firstSeasonId,into=c("startYear","firstSpring"),sep=4)
 es<-mutate(es,FranchiseAge=2020-as.numeric(startYear))
 
@@ -129,6 +125,14 @@ g<-ggplot(es,aes(x=FranchiseAge,y=totalGames))
 g+geom_point()+ylab("Total Games Played")+xlab("Franchise Age")+ 
   geom_smooth(method=lm,col="Green") + 
   labs(title="Total Games Played by Franchise Age")
+
+#Create histogram
+es<-mutate(es,active=is.na(data.lastSeasonId))
+g<-ggplot(es,aes(x=as.numeric(startYear),fill=active))
+g+geom_histogram()+scale_fill_discrete(name="Status",labels=c("Inactive","Active"))+
+  xlab("Franchise Count")+ylab("Franchise Start Year")+
+  labs(title="Histogram of Franchise Start Years")
+filter(es,startYear>2002)%>%select(data.teamPlaceName,data.teamCommonName)
 
 
 #Create new variable indicating if the franchise is active
@@ -152,5 +156,8 @@ g+geom_bar(stat="identity",position="dodge")+scale_fill_discrete(name="Game Type
 
 #Create box plots comparing the Games played for Active and Inactive Teams
 g<-ggplot(e,aes(x=active))
-g+geom_boxplot(aes(y=totalGames))#need to add labels/title
+g+geom_boxplot(aes(y=totalGames,fill=active))+theme(legend.position="none")+xlab("Is Franchise Still Active?")+
+  ylab("Total Games Played")+labs(title="Total Games by Active Status")+scale_x_discrete(labels=c("No","Yes"))
+
+
 
