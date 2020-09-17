@@ -11,6 +11,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 ```
 
 ## Project 1, ST558
@@ -261,8 +262,34 @@ b<-get_hockey_data(endpoint="goalie_records",ID=26)
 #Create a column that indicates whether a goalie is a longTimer, meaning they 
 #have played more games than the average goalie (within the Canes franchise)
 b<-mutate(b,longTimer=(data.gamesPlayed>mean(b$data.gamesPlayed)))
+b
+#Rename variable values to make the table more intuitive
+b$longTimer<-str_replace_all(b$longTimer, 'TRUE', 'Long Timer')
+b$longTimer<-str_replace_all(b$longTimer, 'FALSE', 'Newbie')
+b$data.activePlayer<-str_replace_all(b$data.activePlayer, 'TRUE', 'Active')
+b$data.activePlayer<-str_replace_all(b$data.activePlayer, 'FALSE', 'Inactive')
 
 #Create a table telling us if any of the active goalies are longTimers
 table(b$data.activePlayer,b$longTimer)
-help(table)
 ```
+Unfortunately, we have no long timers that are active. 
+
+Before they were the Carolina Hurricanes, the franchise played as the Hartford Whalers. We might wonder which of these two teams fared better. We will create a new measure of success called goal ratio, which is a ratio of average goals for to average goals against per game. Then we will compare the Hurricanes to the Whalers, with a  break out for regular season and playoff games.
+```{r goal_ratios, echo=TRUE, message=FALSE}
+#Get data from the franchise totals end point, filtered to franchise #26.
+f<-get_hockey_data(endpoint="franchise_totals",ID=26)
+
+#Create new variables called avgGoals and avgGoalsAgainst. 
+f<- f %>% mutate(avgGoals=data.goalsFor/data.gamesPlayed,
+                  avgGoalsAgainst=data.goalsAgainst/data.gamesPlayed)
+
+#Create a new variable called goalRAtio and filter data to only the relevant variables.
+h<-mutate(f, goalRatio=avgGoals/avgGoalsAgainst)
+h %>% select(data.teamName,goalRatio,data.gameTypeId)
+
+#Create a bar graph, comparing the teams' goal ratios.
+g<-ggplot(h,aes(data.teamName,goalRatio,fill=as.factor(data.gameTypeId)))
+g+geom_bar(stat="identity",position="dodge")+scale_fill_discrete(name="Game Type",labels=c("Regular Season","Playoff"))+
+  xlab("Team Name")+ylab("Ratio of Goals Scored to Goals Against")
+```
+By this new Goal Ratio metric, the Hurricanes are the clear winner. Another interesting observation is that the hurricanes tended to perform slightly better, again by this one metric, in the playoffs compared with the regular season. Conversely, the Whalers tended to perform better in the regular season than in the playoffs.
