@@ -1,6 +1,6 @@
 ---
-title: "Project_1"
-author: "Taylor Ashby"
+title: "Project 1, ST558"
+author: "Taylor Ashby"  
 date: "9/18/2020"
 output: 
   rmarkdown::github_document:
@@ -14,8 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
-## Project 1, ST558
-Below are the libraries needed to create this vignette.
+
+Below are the libraries needed for this project.
 
 ```{r libraries, message=FALSE}
 library(httr)
@@ -26,9 +26,9 @@ library(tidyr)
 library(stringr)
 ```
 
-#Accessing NHL Data
+# Accessing NHL Data
 
-The **NHL Records API** has a variety of endpoints with different data you may be interested in. I have created a different function that allows you to access each endpoint. The first one, shown below, allows you to access the /franchise endpoint using the get_franchise_data function.
+The [NHL Records API](https://gitlab.com/dword4/nhlapi/-/blob/master/records-api.md) has a variety of endpoints with different data you may be interested in. I have created a set of functions that allow you to access each of the endpoints. The first one, shown below, allows you to access the /franchise endpoint using the `get_franchise_data` function.
 
 ```{r franch_data, echo=TRUE}
 #Here is the code showing how the get_franchise_data accesses and parses data
@@ -47,17 +47,17 @@ get_franchise_data<-function(ID=NULL){
 
 To access the other endpoints, use one of these functions:
 
-  get_franchise_totals 
+  `get_franchise_totals`
   
-  get_franchise_records
+  `get_franchise_records`
   
-  get_franchise_records
+  `get_franchise_records`
   
-  get_goalie_records
+  `get_goalie_records`
   
-  get_skater_records
+  `get_skater_records`
   
-For *get_franchise_totals*, you have the option to provide a franchise ID number that will filter the results to only the franchise of interest. For the other four functions above, you are **required** to provide this franchise ID, so that the function knows which franchise's data to return.
+For `get_franchise_totals`, you have the option to provide a franchise ID number that will filter the results to only the franchise of interest. For the other four functions above, you are **required** to provide this franchise ID, so that the function knows which franchise's data to return.
 
 ```{r other_endpoints, echo=TRUE}
 get_franchise_totals<-function(ID=NULL){
@@ -103,7 +103,7 @@ get_skater_records<-function(ID=NULL){
 
 ```
 
-There is also an **NHL Stats API** that may be of interest. Use the *get_stats* function (details below) to access it. Note that you can provide a team ID to filter the results and/or provide a modifier input (using mod=) to access additional detail. The 8 available modifiers are as follows:
+There is also an [NHL Stats API](https://gitlab.com/dword4/nhlapi/-/blob/master/stats-api.md) that may be of interest. Use the `get_stats` function (details below) to access it. Note that you can provide a team ID to filter the results and/or provide a modifier input (using mod=) to access additional detail. The 8 available modifiers are as follows:
   
 `?expand=team.roster` Shows roster of active players for the specified team
 
@@ -136,7 +136,10 @@ get_stats<-function(ID=NULL, mod=NULL){
 }
 ```
 
-To make things a little easier, I've created a new function called `get_hockey_data` that is a one-stop shop, for all of the above endpoints. Details are below, but the basic idea is that you simply call this function and pass it the endpoint you want, along with an ID number or modifier (if applicable).
+
+# A simpler way to access NHL data
+
+To make things a little easier, I've created a new function called `get_hockey_data` that is a one-stop shop, for all of the above endpoints. Details are below, but the basic idea is that you simply call this function and pass it the endpoint you want, along with an ID number and/or modifier (if applicable).
 
 ```{r hockey_data, echo=TRUE}
 get_hockey_data<-function(endpoint=NULL,ID=NULL,mod=NULL){
@@ -150,7 +153,7 @@ get_hockey_data<-function(endpoint=NULL,ID=NULL,mod=NULL){
 }
 ```
 
-#Exploring the Data
+# Exploring the Data
 Now that we can access the data, the fun begins! We can explore the data using tools like contingency tables, histograms, scatter plots, and more.
 
 As a starting point, let's look at the history of the NHL. More specifically, we'll look at when the teams were founded and which ones are still active. A histogram would be helpful here.
@@ -158,21 +161,25 @@ As a starting point, let's look at the history of the NHL. More specifically, we
 #First we need to access data from the "franchise_data" endpoint
 hist<-get_hockey_data(endpoint="franchise_data")
 
-#The NHL season typically spans two years, but that makes the data a bit tricky to work with. So we'll extract the very first year value for ease-of-use.
+#The NHL season typically spans two years, but that makes the data a bit tricky to work with. 
+#So we'll extract the very first year value for ease-of-use.
 hist<-separate(hist,data.firstSeasonId,into=c("startYear","firstSpring"),sep=4)
 
-#We will need to create a variable for active status, identified by missing values in the lastSeasonID variable.
+#We will need to create a variable for active status, identified by missing values in the lastSeasonID
+#variable.
 hist<-mutate(hist,active=is.na(data.lastSeasonId))
 
 #Now we are ready to create a histogram using the ggplot package.
 g<-ggplot(hist,aes(x=as.numeric(startYear),fill=active))
-g+geom_histogram()+scale_fill_discrete(name="Status",labels=c("Inactive","Active"))+xlab("Franchise Count")+ylab("Franchise Start Year")+
+g+geom_histogram()+scale_fill_discrete(name="Status",labels=c("Inactive","Active"))+
+  ylab("Franchise Count")+xlab("Franchise Start Year")+
   labs(title="Histogram of Franchise Start Years")
 
-#Pull most recent team. Note that 2002 was somewhat arbitrary, just selected based on a visual inspection of the histogram.
+#Pull most recent team. Note that 2002 was somewhat arbitrary, just selected 
+#based on a visual inspection of the histogram.
 filter(hist,startYear>2002)%>%select(data.teamPlaceName,data.teamCommonName)
 ```
-From the histogram above, we can see that NHL expansions happen in bursts, with many teams created in and around the 1920s. Things were stagnant until the 1960s when a large number of teams were created. The next burst happened in the 1990s and early 2000s and one outlier that occurred in just the last few years. Out of curiosity, I have filtered based on startYear to identify who that most recent franchise is..the Golden Knights of Las Vegas.
+From the histogram above, we can see that NHL expansions happen in bursts, with many teams created just before and during 1920s. Things were stagnant until the 1960s when a large number of teams were created. The next burst happened in the 1990s and early 2000s and one outlier that occurred in just the last few years. Out of curiosity, I have filtered based on startYear to identify who that most recent franchise is...the Golden Knights of Las Vegas.
 
 As we saw in the histogram above, the history of the NHL dates to well before WWII. Next we'll create a contingency table that tells us which conference has more pre-WWII teams. Note that we are now using team data, rather than franchise.
 ```{r table_1, echo=TRUE, message=FALSE}
@@ -191,7 +198,7 @@ preWar$preWWII<-str_replace_all(preWar$preWWII, 'FALSE', 'After WWII')
 table(preWar$preWWII,preWar$teams.conference.name)
 
 ```
-It is clear that the Eastern Conference has more preWWII teams than the Western conference. Perhaps this is driven by population distributions over the early twentieth century. With long distance travel not as easy as it is today, early hockey teams were more concentrated in the population centers of the east coast.
+It is clear that the Eastern Conference has more pre-WWII teams than the Western conference. Perhaps this is driven by population distributions over the early twentieth century. With long distance travel not as easy as it is today, early hockey teams were more concentrated in the population centers of the east coast.
 
 We would expect that those older teams have played more games than the newer teams. Let's create a scatter plot to investigate this hypothesis.
 ```{r scatter, echo=TRUE, message=FALSE}
@@ -218,7 +225,8 @@ g+geom_point()+ylab("Total Games Played")+xlab("Franchise Age")+
   labs(title="Total Games Played by Franchise Age")
 
 ```
-Generally, we see that the relationship holds--older teams have played more games. However, as we saw previously in our histogram, there are several inactive franchises that were founded in the 1920s. These show up in the bottom right corner of our scatter plot, and weaken the linear relationship. If we exclude inactive teams, that should strengthen the linear relationship between age and total games played.
+
+Generally, we see that the relationship holds, i.e., older teams have played more games. However, as we saw previously in our histogram, there are several inactive franchises that were founded around the 1920s. These show up in the bottom right corner of our scatter plot, and weaken the linear relationship. If we exclude inactive teams, that should strengthen the linear relationship between age and total games played.
 ```{r scatter2, echo=TRUE, message=FALSE}
 #Filter out inactive teams (i.e., those where last season ID is populated).
 es<-filter(es,is.na(data.lastSeasonId)==TRUE)
@@ -230,26 +238,27 @@ g+geom_point()+ylab("Total Games Played")+xlab("Franchise Age")+
   geom_smooth(method=lm,col="Green") + 
   labs(title="Total Games Played by Franchise Age (excl. Inactive)")
 ```
+
 If we only look at active franchises, the correlation between age and games played is near-perfect.
 
 It is pretty intuitive to think that active teams would have played more games than inactive teams. There are a variety of other ways to explore/display that relationship. For example, we can create quantitative summaries of games played by active status:
 ```{r quant_summary, echo=TRUE, message=FALSE}
 #Create new variable indicating if the franchise is active
 e<-mutate(e,active=is.na(data.lastSeasonId))
-table(e$active)
 
 #Create quantitative summary by active status
-qs<-e %>% group_by(active)%>%summarise(averageGames=mean(totalGames),medianGames=median(totalGames),grandTotal=sum(totalGames))
-
+qs<-e %>% group_by(active)%>%summarise(averageGames=mean(totalGames), medianGames=median(totalGames),grandTotal=sum(totalGames))
 qs
 ```
 
-Or we could create a box plot of games played, broken out by active status:
+Or we could create box plots of games played by active status:
 ```{r boxplot, echo=TRUE, message=FALSE}
 #Create box plots comparing the Games played for Active and Inactive Teams
 g<-ggplot(e,aes(x=active))
-g+geom_boxplot(aes(y=totalGames,fill=active))+theme(legend.position="none")+xlab("Is Franchise Still Active?")+
-  ylab("Total Games Played")+labs(title="Total Games by Active Status")+scale_x_discrete(labels=c("No","Yes"))
+g+geom_boxplot(aes(y=totalGames,fill=active))+theme(legend.position="none")+
+  xlab("Is Franchise Still Active?")+
+  ylab("Total Games Played")+labs(title="Total Games by Active Status")+
+  scale_x_discrete(labels=c("No","Yes"))
 ```
 
 Both of these approaches make clear that active teams have played far more games on average than inactive teams.
@@ -274,7 +283,7 @@ table(b$data.activePlayer,b$longTimer)
 ```
 Unfortunately, we have no long timers that are active. 
 
-Before they were the Carolina Hurricanes, the franchise played as the Hartford Whalers. We might wonder which of these two teams fared better. We will create a new measure of success called goal ratio, which is a ratio of average goals for to average goals against per game. Then we will compare the Hurricanes to the Whalers, with a  break out for regular season and playoff games.
+Before they were the Carolina Hurricanes, the franchise played as the Hartford Whalers. We might wonder which of these two teams fared better. We will create a new measure of success called goal ratio, which is a ratio of average *goals for* to average *goals against* per game. Then we will compare the Hurricanes to the Whalers, with a  break out for regular season and playoff games.
 ```{r goal_ratios, echo=TRUE, message=FALSE}
 #Get data from the franchise totals end point, filtered to franchise #26.
 f<-get_hockey_data(endpoint="franchise_totals",ID=26)
@@ -292,4 +301,9 @@ g<-ggplot(h,aes(data.teamName,goalRatio,fill=as.factor(data.gameTypeId)))
 g+geom_bar(stat="identity",position="dodge")+scale_fill_discrete(name="Game Type",labels=c("Regular Season","Playoff"))+
   xlab("Team Name")+ylab("Ratio of Goals Scored to Goals Against")
 ```
-By this new Goal Ratio metric, the Hurricanes are the clear winner. Another interesting observation is that the hurricanes tended to perform slightly better, again by this one metric, in the playoffs compared with the regular season. Conversely, the Whalers tended to perform better in the regular season than in the playoffs.
+
+By this new Goal Ratio metric, the Hurricanes are the clear winner. Another interesting observation is that the Hurricanes tended to perform slightly better, again by this one metric, in the playoffs compared with the regular season. Conversely, the Whalers tended to perform better in the regular season than in the playoffs.
+
+# Parting Thoughts
+The NHL APIs are a treasure trove of information for hockey fans and data nerds alike. I hope this vignette provides a good introduction for how to access the data and explore what it means. Thanks for reading!
+
